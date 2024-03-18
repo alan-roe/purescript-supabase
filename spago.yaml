@@ -1,0 +1,35 @@
+package:
+  dependencies:
+    - aff
+    - aff-promise
+    - console
+    - datetime
+    - effect
+    - either
+    - exceptions
+    - fetch
+    - foldable-traversable
+    - foreign
+    - functions
+    - js-fetch
+    - lists
+    - maybe
+    - nullable
+    - prelude
+    - react-basic-hooks
+    - record
+    - record-studio
+    - transformers
+    - tuples
+    - typelevel-prelude
+    - unsafe-coerce
+    - unsafe-reference
+    - untagged-union
+    - web-file
+    - yoga-json
+  name: supabase
+workspace:
+  extra_packages: {}
+  package_set:
+    registry: 50.1.2
+

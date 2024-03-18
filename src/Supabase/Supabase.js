@@ -1,3 +1,10 @@
+import { createClient } from '@supabase/supabase-js'
+
+export const createClientImpl = (url) => (key) => () => createClient(url, key)
+
+export const signInWithPasswordImpl = (supabase) => (credentials) => () => 
+  supabase.auth.signInWithPassword(credentials)
+
 export const signInWithOtpImpl = (supabase) => (email) => () =>
   supabase.auth.signInWithOtp({ email });
 
@@ -39,13 +46,15 @@ export const rangeImpl = (from) => (to) => (filterBuilder) => () =>
 export const upsertImpl = (queryBuilder) => (values) =>
   queryBuilder.upsert(values);
 
-export const selectRunImpl = (queryBuilder) => (input) => () =>
-  queryBuilder.select(input);
+export const selectRunImpl = (queryBuilder) => (input) => () => queryBuilder.select(input);
 
 export const invokeImpl = (client) => (functionName, body, headers) => () =>
   client.functions.invoke(functionName, {
     body,
     headers,
   });
+
+  export const rpcImpl = (client) => (functionName) => (args) => () =>
+  client.rpc(functionName, JSON.parse(args));
 
 export const channel = (channelName) => (client) => () => client.channel(channelName);

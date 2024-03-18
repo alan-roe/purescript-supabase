@@ -15,25 +15,28 @@ module Supabase.Supabase
   , SignInOptions
   , StatusR
   , User
+  , channel
   , class Equals
   , class Select
+  , createClient
   , delete
   , equals
-  , channel
   , from
   , getSession
+  , getUser
   , invoke
   , maybeSingle
   , onAuthStateChange
   , range
   , select
-  , getUser
   , signInWithOtp
   , signInWithOtpOptions
+  , signInWithPassword
   , signOut
   , single
   , update
   , upsert
+  , rpc
   ) where
 
 import Prelude
@@ -60,7 +63,19 @@ import Data.Nullable as Nullable
 import Control.Promise as Promise
 import Supabase.Util as Util
 import Yoga.JSON (class ReadForeign, class WriteForeign, write) as YogaJson
-import Fetch.Core.Response as YogaJson.Core
+import JS.Fetch.Response as YogaJson.Core
+
+foreign import createClientImpl :: String -> String -> Effect Client
+
+createClient :: String -> String -> Effect Client
+createClient = createClientImpl
+
+type Credentials = { email ∷ String, password ∷ String }
+
+foreign import signInWithPasswordImpl :: Client -> Credentials -> Effect (Promise InternalAuthResponse)
+
+signInWithPassword :: Client -> Credentials -> Aff AuthResponse
+signInWithPassword client creds = signInWithPasswordImpl client creds # Promise.toAffE <#> \{ error } -> { error: Nullable.toMaybe error }
 
 foreign import data QueryBuilder :: Type
 foreign import data FilterBuilder :: Type
@@ -201,6 +216,14 @@ type FunctionResponse d = { "data" :: Maybe d, error :: Maybe { message :: Strin
 
 invoke ∷ forall t body headers. ReadForeign t ⇒ Client → String → body → headers → Aff (FunctionResponse t)
 invoke client fn body headers = runFn3 (invokeImpl client) fn body headers # Promise.toAffE <#> convert
+  where
+  convertError { message, context } = { message, context: FetchInternalResponse.convert context }
+  convert { "data": d, error } = { "data": Nullable.toMaybe d, error: Nullable.toMaybe error <#> convertError }
+
+foreign import rpcImpl :: forall a t. Client -> String -> a -> Effect (Promise (InternalFunctionResponse t))
+
+rpc :: forall a t. ReadForeign t => Client -> String -> a -> Aff (FunctionResponse t)
+rpc c s x = rpcImpl c s x # Promise.toAffE <#> convert
   where
   convertError { message, context } = { message, context: FetchInternalResponse.convert context }
   convert { "data": d, error } = { "data": Nullable.toMaybe d, error: Nullable.toMaybe error <#> convertError }
